@@ -1,0 +1,160 @@
+5.2.2
+- Issue #390 fixed
+- Issue #423 fixed
+- Issue #464 fixed
+- Issue #467 fixed
+- Issue #470 fixed
+- Add --tar option to compress some output folders
+
+5.2.1
+- Minor bug fixes
+
+5.2.0
+- Issue #224 fixed
+- Issue #232 fixed
+- Issue #266 fixed
+- Issue #270 fixed
+- Issue #352 fixed
+- Issue #368 fixed
+- Issue #386 fixed
+- Introduce direct download option (Issues #252, #288)
+
+5.1.3
+- Issue #408 fixed
+- Bug fixes
+
+5.1.2
+- Fix bug in batch  mode that affects Augustus runs
+
+5.1.1
+- Fix bug in batch mode
+
+5.1.0
+- Implement batch mode
+- Issue #221 fixed
+- Issue #328 fixed
+- Issue #360 fixed
+- Issue #388 fixed
+- Issue #406 fixed
+- Issue #415 fixed
+
+5.0.0
+- Implement metaeuk exon overlap filter
+- Use metaeuk for eukaryote transcriptomes
+- Issue #198 fixed
+- Issue #248 fixed
+- Issue #256 fixed
+- Issue #260 fixed
+- Issue #267 fixed
+- Issue #277 fixed
+- Issue #306 fixed
+- Issue #313 fixed
+- Issue #318 fixed
+- Issue #326 fixed
+- Issue #340 fixed
+- Issue #344 fixed
+- Issue #351 fixed
+- Issue #357 fixed
+- Issue #373 fixed
+- Issue #385 fixed
+
+5.beta.1
+- Provide option to run augustus instead of metaeuk
+
+5.beta
+- Replace Augustus with Metaeuk
+
+4.1.4
+- Fix Augustus parsing bug
+
+4.1.3
+- Issue #296 fixed
+- Issue #305 fixed
+- Augustus parser improved
+
+4.1.2
+- Issue #295 fixed
+
+4.1.1
+- Issue #287 fixed
+
+4.1.0
+- Reintroduce restart mode (Issues #203, #229, #251)
+- Fix augustus hanging problem (Issues #224, #232, #266)
+- Allow multiple cores for BLAST 2.10.1+
+- Issue #271 fixed
+- Issue #247 fixed
+- Issue #234 fixed
+
+4.0.6
+- Fix Augustus GFF parsing bug. Remove constraint on Augustus version.
+
+4.0.5
+- Constrain to use Augustus v3.2.3 on conda and Docker
+
+4.0.4
+- Fix inefficiency introduced in 4.0.3
+
+4.0.3
+- Issue #190 fixed
+- Issue #191 fixed
+- Issue #196 fixed
+- Issue #200 fixed
+- Reintroduce full retraining for all eukaryote runs
+
+4.0.2
+- Issue #182 partially fixed
+
+4.0.1
+- Issue #164 fixed
+- Issue #166 fixed
+- Issue #169 fixed
+- Enforce single core on BLAST 2.4-2.10 to guarantee consistency of results. We recommend BLAST 2.2 or 2.3 for performance.
+
+4.0.0
+- Add the auto lineage selection through phylogenetic placement
+- Introduce the automated downloads and updates of data files
+- Use the OrthoDB v10 datasets, "_odb10", 166 lineages including archaea
+- Add links to orthoDB in the file full_table.tsv
+- Use Prodigal as gene predictor for non-eukaryotes
+- Major refactoring of the code
+- Main script is now called `busco`
+- Improved logging system, notably to address issue #60 and to provide debug info without rerunning with debug=True
+- Fix many minor bugs reported over years
+
+3.1.0
+- Add the additional script run_BUSCO_auto_lineage.sh
+
+3.0.2
+- The ~ character can be used in the config.ini file
+
+3.0.1
+- Add the environment variable BUSCO_CONFIG_FILE
+- Add the –blast_single_core option
+- Incompatibilities between plotting tool and config fixed
+
+3.0.0
+- Major refactoring of the code
+- Introduce setup.py
+- Introduce the config.ini file
+- Issue #24 fixed
+- Issue #25 fixed
+- Switch to the MIT License
+
+2.0.1
+- Stop the execution when tblastn crashes, instead of just warning the user
+- Issue #16 fixed
+- Issue #9 fixed
+
+2.0
+- Minor changes, similar to beta 4
+
+2.0 beta 4
+- Sort the results by BUSCO ids in the full table output file
+- Allow the user to pass custom Augustus parameters
+
+2.0 beta 3
+- Improve the detection of problematic special characters in the fasta header and sequences
+
+2.0 beta
+- The 1.0 code was debugged and new functionalities were added. See the user guide
