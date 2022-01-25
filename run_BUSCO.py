@@ -33,7 +33,7 @@ from aglab_busco.ConfigManager import BuscoConfigManager
 #     CleanVersionAction,
 #     DirectDownload,
 # )
-# from busco.ConfigManager import BuscoConfigMain
+from aglab_busco.ConfigManager import BuscoConfigMain
 # # from busco.busco_tools.Toolset import ToolException
 
 import sys
@@ -282,18 +282,18 @@ def _parse_args():
 #         help="Specify local filepath for storing BUSCO dataset downloads",
 #     )
 
-#     optional.add_argument(
-#         "-e",
-#         "--evalue",
-#         dest="evalue",
-#         required=False,
-#         metavar="N",
-#         type=float,
-#         help="E-value cutoff for BLAST searches. "
-#         "Allowed formats, 0.001 or 1e-03 (Default: {:.0e})".format(
-#             BuscoConfigMain.DEFAULT_ARGS_VALUES["evalue"]
-#         ),
-#     )
+    optional.add_argument(
+        "-e",
+        "--evalue",
+        dest="evalue",
+        required=False,
+        metavar="N",
+        type=float,
+        help="E-value cutoff for BLAST searches. "
+        "Allowed formats, 0.001 or 1e-03 (Default: {:.0e})".format(
+            BuscoConfigMain.DEFAULT_ARGS_VALUES["evalue"]
+        ),
+    )
 
 #     optional.add_argument(
 #         "-f",
@@ -305,20 +305,20 @@ def _parse_args():
 #         "Must be used when output files with the provided name already exist.",
 #     )
 
-#     optional.add_argument(
-#         "-h", "--help", action=CleanHelpAction, help="Show this help message and exit"
-#     )
+    # optional.add_argument(
+    #     "-h", "--help", action=CleanHelpAction, help="Show this help message and exit"
+    # )
 
-#     optional.add_argument(
-#         "--limit",
-#         dest="limit",
-#         metavar="N",
-#         required=False,
-#         type=int,
-#         help="How many candidate regions (contig or transcript) to consider per BUSCO (default: {})".format(
-#             str(BuscoConfigMain.DEFAULT_ARGS_VALUES["limit"])
-#         ),
-#     )
+    optional.add_argument(
+        "--limit",
+        dest="limit",
+        metavar="N",
+        required=False,
+        type=int,
+        help="How many candidate regions (contig or transcript) to consider per BUSCO (default: {})".format(
+            str(BuscoConfigMain.DEFAULT_ARGS_VALUES["limit"])
+        ),
+    )
 
 #     optional.add_argument(
 #         "--list-datasets",

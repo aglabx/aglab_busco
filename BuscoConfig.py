@@ -407,8 +407,11 @@ class BuscoConfigMain(BuscoConfig, BaseConfig):
 
     def validate(self):
         self._check_mandatory_keys_exist()
-        self._cleanup_config()
-#         self._check_no_previous_run()
+        self._check_out_value()
+        self._check_limit_value()
+        self._check_evalue()
+        self._expand_all_paths()
+        self._check_no_previous_run()
 #         self._check_allowed_keys()
 #         self._create_required_paths()
 #         self._check_required_input_exists()
@@ -467,17 +470,17 @@ class BuscoConfigMain(BuscoConfig, BaseConfig):
 #             )
 #         return
 
-#     def _check_evalue(self):
-#         """
-#         Warn the user if the config contains a non-standard e-value cutoff.
-#         :return:
-#         """
-#         if (
-#             self.getfloat("busco_run", "evalue")
-#             != type(self).DEFAULT_ARGS_VALUES["evalue"]
-#         ):
-#             logger.warning("You are using a custom e-value cutoff")
-#         return
+    def _check_evalue(self):
+        """
+        Warn the user if the config contains a non-standard e-value cutoff.
+        :return:
+        """
+        if (
+            self.getfloat("busco_run", "evalue")
+            != type(self).DEFAULT_ARGS_VALUES["evalue"]
+        ):
+            logger.warning("You are using a custom e-value cutoff")
+        return
 
     def _check_limit_value(self):
         """
@@ -639,15 +642,6 @@ class BuscoConfigMain(BuscoConfig, BaseConfig):
 
 #         return
 
-    def _cleanup_config(self):
-        """
-        Collection of housekeeping functions to ensure configuration is suitable.
-        :return:
-        """
-        self._check_out_value()
-        self._check_limit_value()
-        self._check_evalue()
-        self._expand_all_paths()
 
 #     @staticmethod
 #     @log(
@@ -670,20 +664,18 @@ class BuscoConfigMain(BuscoConfig, BaseConfig):
 #         self.set("busco_run", "main_out", self.main_out)
 #         return
 
-#     def _expand_all_paths(self):
-#         """
-#         Convert relative pathnames beginning with "~" or "." into absolute paths.
-#         :return:
-#         """
-#         for key in self.sections():
-#             for item in self.items(key):
-#                 if item[0].endswith("_path") or item[0] == "path" or item[0] == "in":
-#                     if item[1].startswith("~"):
-#                         self.set(key, item[0], os.path.expanduser(item[1]))
-#                     elif item[1]:
-#                         self.set(key, item[0], os.path.abspath(item[1]))
-
-#         return
+    def _expand_all_paths(self):
+        """
+        Convert relative pathnames beginning with "~" or "." into absolute paths.
+        :return:
+        """
+        for key in self.sections():
+            for item in self.items(key):
+                if item[0].endswith("_path") or item[0] == "path" or item[0] == "in":
+                    if item[1].startswith("~"):
+                        self.set(key, item[0], os.path.expanduser(item[1]))
+                    elif item[1]:
+                        self.set(key, item[0], os.path.abspath(item[1]))
 
     def _check_value_constraints(self):
         """
