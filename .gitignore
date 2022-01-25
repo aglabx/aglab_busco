@@ -1,0 +1,4 @@
+*.pyc
+busco_downloads/*
+temp/*
+__pycache__/*
