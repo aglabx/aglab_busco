@@ -22,7 +22,7 @@ Licensed under the MIT license. See LICENSE.md file.
 import argparse
 from argparse import RawTextHelpFormatter
 import aglab_busco
-# from busco.BuscoRunner import AnalysisRunner, BatchRunner, SingleRunner
+from aglab_busco.BuscoRunner import AnalysisRunner, BatchRunner, SingleRunner
 from aglab_busco.Exceptions import BatchFatalError, BuscoError
 from aglab_busco.BuscoLogger import BuscoLogger
 from aglab_busco.BuscoLogger import LogDecorator as log
@@ -56,36 +56,37 @@ class BuscoMaster:
         self.config_manager = BuscoConfigManager(self.params)
         self.config = self.config_manager.config_main
 
-#     def harmonize_auto_lineage_settings(self):
-#         if not self.config.check_lineage_present():
-#             if (
-#                 not self.config.getboolean("busco_run", "auto-lineage")
-#                 and not self.config.getboolean("busco_run", "auto-lineage-prok")
-#                 and not self.config.getboolean("busco_run", "auto-lineage-euk")
-#             ):
-#                 logger.warning(
-#                     "Running Auto Lineage Selector as no lineage dataset was specified. This will take a "
-#                     "little longer than normal. If you know what lineage dataset you want to use, please "
-#                     "specify this in the config file or using the -l (--lineage-dataset) flag in the "
-#                     "command line."
-#                 )
-#             self.config.set("busco_run", "auto-lineage", "True")
+    def harmonize_auto_lineage_settings(self):
+        """ Something wrong with this code.
+        """
+        if not self.config.check_lineage_present():
+            if (
+                not self.config.getboolean("busco_run", "auto-lineage")
+                and not self.config.getboolean("busco_run", "auto-lineage-prok")
+                and not self.config.getboolean("busco_run", "auto-lineage-euk")
+            ):
+                logger.warning(
+                    "Running Auto Lineage Selector as no lineage dataset was specified. This will take a "
+                    "little longer than normal. If you know what lineage dataset you want to use, please "
+                    "specify this in the config file or using the -l (--lineage-dataset) flag in the "
+                    "command line."
+                )
+            self.config.set("busco_run", "auto-lineage", "True")
 
-#         else:
-#             if (
-#                 self.config.getboolean("busco_run", "auto-lineage")
-#                 or self.config.getboolean("busco_run", "auto-lineage-prok")
-#                 or self.config.getboolean("busco_run", "auto-lineage-euk")
-#             ):
-#                 logger.warning(
-#                     "You have selected auto-lineage but you have also provided a lineage dataset. "
-#                     "BUSCO will proceed with the specified dataset. "
-#                     "To run auto-lineage do not specify a dataset."
-#                 )
-#             self.config.set("busco_run", "auto-lineage", "False")
-#             self.config.set("busco_run", "auto-lineage-prok", "False")
-#             self.config.set("busco_run", "auto-lineage-euk", "False")
-#         return
+        else:
+            if (
+                self.config.getboolean("busco_run", "auto-lineage")
+                or self.config.getboolean("busco_run", "auto-lineage-prok")
+                or self.config.getboolean("busco_run", "auto-lineage-euk")
+            ):
+                logger.warning(
+                    "You have selected auto-lineage but you have also provided a lineage dataset. "
+                    "BUSCO will proceed with the specified dataset. "
+                    "To run auto-lineage do not specify a dataset."
+                )
+            self.config.set("busco_run", "auto-lineage", "False")
+            self.config.set("busco_run", "auto-lineage-prok", "False")
+            self.config.set("busco_run", "auto-lineage-euk", "False")
 
     def load_config(self):
         """
@@ -96,6 +97,8 @@ class BuscoMaster:
         self.config = self.config_manager.config_main
 
     def check_batch_mode(self):
+        """
+        """
         return self.config.getboolean("busco_run", "batch_mode")
 
     def run(self):
@@ -109,17 +112,12 @@ class BuscoMaster:
                 else SingleRunner(self.config_manager)
             )
             runner.run()
-        except Exception as e:
-            raise e
-
-        # except BuscoError as be:
-        #     SingleRunner.log_error(be)
-        #     raise SystemExit(1)
-
-        # except BatchFatalError as bfe:
-        #     SingleRunner.log_error(bfe)
-        #     raise SystemExit(1)
-
+        except BuscoError as be:
+            SingleRunner.log_error(be)
+            raise SystemExit(1)
+        except BatchFatalError as bfe:
+            SingleRunner.log_error(bfe)
+            raise SystemExit(1)
         # finally:
         #     try:
         #         AnalysisRunner.move_log_file(self.config)
@@ -180,14 +178,14 @@ def _parse_args():
         "for transcriptome assemblies (DNA)\n- prot or proteins, for annotated gene sets (protein)",
     )
 
-#     optional.add_argument(
-#         "-l",
-#         "--lineage_dataset",
-#         dest="lineage_dataset",
-#         required=False,
-#         metavar="LINEAGE",
-#         help="Specify the name of the BUSCO lineage to be used.",
-#     )
+    optional.add_argument(
+        "-l",
+        "--lineage_dataset",
+        dest="lineage_dataset",
+        required=False,
+        metavar="LINEAGE",
+        help="Specify the name of the BUSCO lineage to be used.",
+    )
 
 #     optional.add_argument(
 #         "--augustus",
@@ -213,29 +211,29 @@ def _parse_args():
 #         help="Specify a species for Augustus training.",
 #     )
 
-#     optional.add_argument(
-#         "--auto-lineage",
-#         dest="auto-lineage",
-#         action="store_true",
-#         required=False,
-#         help="Run auto-lineage to find optimum lineage path",
-#     )
+    optional.add_argument(
+        "--auto-lineage",
+        dest="auto-lineage",
+        action="store_true",
+        required=False,
+        help="Run auto-lineage to find optimum lineage path",
+    )
 
-#     optional.add_argument(
-#         "--auto-lineage-euk",
-#         dest="auto-lineage-euk",
-#         action="store_true",
-#         required=False,
-#         help="Run auto-placement just on eukaryote tree to find optimum lineage path",
-#     )
+    optional.add_argument(
+        "--auto-lineage-euk",
+        dest="auto-lineage-euk",
+        action="store_true",
+        required=False,
+        help="Run auto-placement just on eukaryote tree to find optimum lineage path",
+    )
 
-#     optional.add_argument(
-#         "--auto-lineage-prok",
-#         dest="auto-lineage-prok",
-#         action="store_true",
-#         required=False,
-#         help="Run auto-lineage just on non-eukaryote trees to find optimum lineage path",
-#     )
+    optional.add_argument(
+        "--auto-lineage-prok",
+        dest="auto-lineage-prok",
+        action="store_true",
+        required=False,
+        help="Run auto-lineage just on non-eukaryote trees to find optimum lineage path",
+    )
 
 #     optional.add_argument(
 #         "-c",
@@ -247,16 +245,16 @@ def _parse_args():
 #         help="Specify the number (N=integer) " "of threads/cores to use.",
 #     )
 
-#     optional.add_argument(
-#         "--config", dest="config_file", required=False, help="Provide a config file"
-#     )
+    optional.add_argument(
+        "--config", dest="config_file", required=False, help="Provide a config file"
+    )
 
-#     optional.add_argument(
-#         "--datasets_version",
-#         dest="datasets_version",
-#         required=False,
-#         help="Specify the version of BUSCO datasets, e.g. odb10",
-#     )
+    optional.add_argument(
+        "--datasets_version",
+        dest="datasets_version",
+        required=False,
+        help="Specify the version of BUSCO datasets, e.g. odb10",
+    )
 
 #     optional.add_argument(
 #         "--download",
@@ -268,19 +266,19 @@ def _parse_args():
 #         help='Download dataset. Possible values are a specific dataset name, "all", "prokaryota", "eukaryota", or "virus". If used together with other command line arguments, make sure to place this last.',
 #     )
 
-#     optional.add_argument(
-#         "--download_base_url",
-#         dest="download_base_url",
-#         required=False,
-#         help="Set the url to the remote BUSCO dataset location",
-#     )
+    optional.add_argument(
+        "--download_base_url",
+        dest="download_base_url",
+        required=False,
+        help="Set the url to the remote BUSCO dataset location",
+    )
 
-#     optional.add_argument(
-#         "--download_path",
-#         dest="download_path",
-#         required=False,
-#         help="Specify local filepath for storing BUSCO dataset downloads",
-#     )
+    optional.add_argument(
+        "--download_path",
+        dest="download_path",
+        required=False,
+        help="Specify local filepath for storing BUSCO dataset downloads",
+    )
 
     optional.add_argument(
         "-e",

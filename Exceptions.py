@@ -30,3 +30,9 @@ class BuscoError(Exception):
 
     def __str__(self):
         return self.value
+
+class NoGenesError(BuscoError):
+    
+    def __init__(self):
+        super().__init__("No genes were recognized by BUSCO. Please check the content of your input file.")
+

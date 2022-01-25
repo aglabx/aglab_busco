@@ -55,6 +55,6 @@ class BuscoConfigManager:
         self.config_main = BuscoConfigMain(self.config_file, self.params)
         self.config_main.configure()
 
-    # def load_busco_config_auto(self, lineage):
-    #     autoconfig = BuscoConfigAuto(self.config_main, lineage)
-    #     return autoconfig
+    def load_busco_config_auto(self, lineage):
+        autoconfig = BuscoConfigAuto(self.config_main, lineage)
+        return autoconfig

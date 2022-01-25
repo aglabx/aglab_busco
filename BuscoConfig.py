@@ -41,7 +41,7 @@ def confirmation_decorator(message):
         return wrapped_f
     return wrap
 
-class BaseConfig(ConfigParser):
+class BuscoConfig(ConfigParser):
 
     MANDATORY_USER_PROVIDED_PARAMS = ["in", "out", "mode"]
 
@@ -159,11 +159,11 @@ class BaseConfig(ConfigParser):
 
     def __init__(self):
         super().__init__()
-        config_dict = {"busco_run": BaseConfig.DEFAULT_ARGS_VALUES}
+        config_dict = {"busco_run": BuscoConfig.DEFAULT_ARGS_VALUES}
         config_dict.update(
             {
                 tool: {"path": "", "command": ""}
-                for tool in BaseConfig.DEPENDENCY_SECTIONS
+                for tool in BuscoConfig.DEPENDENCY_SECTIONS
             }
         )
         self.read_dict(config_dict)
@@ -208,7 +208,7 @@ class BaseConfig(ConfigParser):
         :return:
         """
         for key, val in args.items():
-            if key in BaseConfig.PERMITTED_OPTIONS:
+            if key in BuscoConfig.PERMITTED_OPTIONS:
                 if val is not None and type(val) is not bool:
                     self.set("busco_run", key, str(val))
                 elif val:
@@ -221,8 +221,75 @@ class BaseConfig(ConfigParser):
         if not os.path.exists(main_out):
             os.makedirs(main_out)
 
+    def download_lineage_file(self, lineage):
+        """
+        Download lineage dataset if not present using BuscoDownloadManager.
+        :param str lineage: Basename of the lineage dataset
+        :return str lineage_filepath: Local path to downloaded file
+        """
+        local_lineage_filepath = self.downloader.get(lineage, "lineages")
+        self.set("busco_run", "lineage_dataset", local_lineage_filepath)
+        return
 
-class PseudoConfig(BaseConfig):
+    def load_dataset(self, lineage):
+        self.set_results_dirname(lineage)  # function always only uses basename
+        self.download_lineage_file(
+            lineage
+        )  # full path will return, base name will attempt download
+        self.load_dataset_config()
+
+    def load_dataset_config(self):
+        """
+        Load BUSCO dataset config file.
+        :return:
+        """
+        try:
+            with open(
+                os.path.join(self.get("busco_run", "lineage_dataset"), "dataset.cfg"),
+                "r",
+            ) as target_species_file:
+                dataset_kwargs = dict(
+                    line.strip().split("=") for line in target_species_file
+                )
+                for key, value in dataset_kwargs.items():
+                    if key == "species":
+                        try:
+                            config_species = self.get("busco_run", "augustus_species")
+                            if config_species != value:
+                                logger.warning(
+                                    "An augustus species was mentioned in the config file or on the command "
+                                    "line, dataset default species ({}) will be ignored".format(
+                                        value
+                                    )
+                                )
+                        except NoOptionError:
+                            self.set("busco_run", "augustus_species", value)
+
+                    if key in [
+                        "prodigal_genetic_code",
+                        "ambiguous_cd_range_upper",
+                        "ambiguous_cd_range_lower",
+                    ]:
+                        self.set("prodigal", key, value)
+                    else:
+                        self.set("busco_run", key, value)
+
+        except IOError:
+            logger.warning(
+                "The dataset you provided does not contain the file dataset.cfg and is not valid for "
+                "BUSCO v4.0 or higher"
+            )
+        return
+
+    def set_results_dirname(self, lineage):
+        self.set(
+            "busco_run",
+            "lineage_results_dir",
+            "run_{}".format(os.path.basename(lineage)),
+        )
+
+
+class PseudoConfig(BuscoConfig):
 
 
     pass
@@ -245,7 +312,7 @@ class PseudoConfig(BaseConfig):
 #             self.set(
 #                 "busco_run",
 #                 "download_base_url",
-#                 BaseConfig.DEFAULT_ARGS_VALUES["download_base_url"],
+#                 BuscoConfig.DEFAULT_ARGS_VALUES["download_base_url"],
 #             )
 
 #         try:
@@ -254,7 +321,7 @@ class PseudoConfig(BaseConfig):
 #             self.set(
 #                 "busco_run",
 #                 "download_path",
-#                 BaseConfig.DEFAULT_ARGS_VALUES["download_path"],
+#                 BuscoConfig.DEFAULT_ARGS_VALUES["download_path"],
 #             )
 
 #         try:
@@ -283,86 +350,8 @@ class PseudoConfig(BaseConfig):
 #             self.set("busco_run", "update-data", "True")
 
 
-class BuscoConfig(ConfigParser):
-    """
-    This class extends busco.ConfigParser to read the config.ini file. Furthermore, it uses extra args that can be
-    provided through command line and information available in the dataset.cfg file to produce a single instance
-    containing all correct parameters to be injected to a busco.BuscoAnalysis instance.
-    """
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
 
-
-#     def download_lineage_file(self, lineage):
-#         """
-#         Download lineage dataset if not present using BuscoDownloadManager.
-#         :param str lineage: Basename of the lineage dataset
-#         :return str lineage_filepath: Local path to downloaded file
-#         """
-#         local_lineage_filepath = self.downloader.get(lineage, "lineages")
-#         self.set("busco_run", "lineage_dataset", local_lineage_filepath)
-#         return
-
-#     def load_dataset(self, lineage):
-#         self.set_results_dirname(lineage)  # function always only uses basename
-#         self.download_lineage_file(
-#             lineage
-#         )  # full path will return, base name will attempt download
-#         self.load_dataset_config()
-
-#     def load_dataset_config(self):
-#         """
-#         Load BUSCO dataset config file.
-#         :return:
-#         """
-#         try:
-#             with open(
-#                 os.path.join(self.get("busco_run", "lineage_dataset"), "dataset.cfg"),
-#                 "r",
-#             ) as target_species_file:
-#                 dataset_kwargs = dict(
-#                     line.strip().split("=") for line in target_species_file
-#                 )
-#                 for key, value in dataset_kwargs.items():
-#                     if key == "species":
-#                         try:
-#                             config_species = self.get("busco_run", "augustus_species")
-#                             if config_species != value:
-#                                 logger.warning(
-#                                     "An augustus species was mentioned in the config file or on the command "
-#                                     "line, dataset default species ({}) will be ignored".format(
-#                                         value
-#                                     )
-#                                 )
-#                         except NoOptionError:
-#                             self.set("busco_run", "augustus_species", value)
-
-#                     if key in [
-#                         "prodigal_genetic_code",
-#                         "ambiguous_cd_range_upper",
-#                         "ambiguous_cd_range_lower",
-#                     ]:
-#                         self.set("prodigal", key, value)
-#                     else:
-#                         self.set("busco_run", key, value)
-
-#         except IOError:
-#             logger.warning(
-#                 "The dataset you provided does not contain the file dataset.cfg and is not valid for "
-#                 "BUSCO v4.0 or higher"
-#             )
-#         return
-
-#     def set_results_dirname(self, lineage):
-#         self.set(
-#             "busco_run",
-#             "lineage_results_dir",
-#             "run_{}".format(os.path.basename(lineage)),
-#         )
-#         return
-
-
-class BuscoConfigAuto(BaseConfig):
+class BuscoConfigAuto(BuscoConfig):
 
     def __init__(self, config, lineage, **kwargs):
         super().__init__(**kwargs)
@@ -378,21 +367,19 @@ class BuscoConfigAuto(BaseConfig):
         main_out = os.path.join(self.get("busco_run", "main_out"), "auto_lineage")
         super()._create_required_paths(main_out)
 
-#     def _propagate_config(self, config):
-#         """
-#         Copy all information from BuscoConfigMain sections into this BuscoConfigAuto object.
-#         Also copy BuscoDownloadManager object instead of instantiating a second one.
-#         :param config:
-#         :return:
-#         """
-#         for key, value in config.items():
-#             self[key] = value
-
-#         self.downloader = config.downloader
-#         return
+    def _propagate_config(self, config):
+        """
+        Copy all information from BuscoConfigMain sections into this BuscoConfigAuto object.
+        Also copy BuscoDownloadManager object instead of instantiating a second one.
+        :param config:
+        :return:
+        """
+        for key, value in config.items():
+            self[key] = value
+        self.downloader = config.downloader
 
 
-class BuscoConfigMain(BuscoConfig, BaseConfig):
+class BuscoConfigMain(BuscoConfig):
 
 
     def __init__(self, conf_file, params):
@@ -431,41 +418,41 @@ class BuscoConfigMain(BuscoConfig, BaseConfig):
         logger.debug("State of BUSCO config before run:")
         logger.debug(PrettyLog(vars(self)))
 
-#     def check_lineage_present(self):
-#         """
-#         Check if "lineage_dataset" parameter has been provided by user.
-#         :return: True if present, False if not
-#         :rtype: bool
-#         """
-#         try:
-#             lineage_dataset = self.get("busco_run", "lineage_dataset")
-#             datasets_version = self.get("busco_run", "datasets_version")
-#             if "_odb" in lineage_dataset:
-#                 dataset_version = lineage_dataset.rsplit("_")[-1].rstrip("/")
-#                 if datasets_version != dataset_version:
-#                     logger.warning(
-#                         "There is a conflict in your config. You specified a dataset from {0} while "
-#                         "simultaneously requesting the datasets_version parameter be {1}. Proceeding with "
-#                         "the lineage dataset as specified from {0}".format(
-#                             dataset_version, datasets_version
-#                         )
-#                     )
-#                 self.set("busco_run", "datasets_version", dataset_version)
-#             else:  # Make sure the ODB version is in the dataset name
-#                 lineage_dataset = "_".join([lineage_dataset, datasets_version])
-#                 self.set("busco_run", "lineage_dataset", lineage_dataset)
+    def check_lineage_present(self):
+        """
+        Check if "lineage_dataset" parameter has been provided by user.
+        :return: True if present, False if not
+        :rtype: bool
+        """
+        try:
+            lineage_dataset = self.get("busco_run", "lineage_dataset")
+            datasets_version = self.get("busco_run", "datasets_version")
+            if "_odb" in lineage_dataset:
+                dataset_version = lineage_dataset.rsplit("_")[-1].rstrip("/")
+                if datasets_version != dataset_version:
+                    logger.warning(
+                        "There is a conflict in your config. You specified a dataset from {0} while "
+                        "simultaneously requesting the datasets_version parameter be {1}. Proceeding with "
+                        "the lineage dataset as specified from {0}".format(
+                            dataset_version, datasets_version
+                        )
+                    )
+                self.set("busco_run", "datasets_version", dataset_version)
+            else:  # Make sure the ODB version is in the dataset name
+                lineage_dataset = "_".join([lineage_dataset, datasets_version])
+                self.set("busco_run", "lineage_dataset", lineage_dataset)
 
-#             datasets_version = self.get("busco_run", "datasets_version")
-#             if datasets_version != "odb10":
-#                 raise BatchFatalError(
-#                     "BUSCO v5 only works with datasets from OrthoDB v10 (with the suffix '_odb10'). "
-#                     "For a full list of available datasets, enter 'busco --list-datasets'. "
-#                     "You can also run BUSCO using --auto-lineage, to allow BUSCO to automatically select "
-#                     "the best dataset for your input data."
-#                 )
-#             return True
-#         except NoOptionError:
-#             return False
+            datasets_version = self.get("busco_run", "datasets_version")
+            if datasets_version != "odb10":
+                raise BatchFatalError(
+                    "BUSCO v5 only works with datasets from OrthoDB v10 (with the suffix '_odb10'). "
+                    "For a full list of available datasets, enter 'busco --list-datasets'. "
+                    "You can also run BUSCO using --auto-lineage, to allow BUSCO to automatically select "
+                    "the best dataset for your input data."
+                )
+            return True
+        except NoOptionError:
+            return False
 
     def _check_batch_mode(self):
         if os.path.isdir(self._input_filepath):
@@ -483,7 +470,7 @@ class BuscoConfigMain(BuscoConfig, BaseConfig):
         """
         if (
             self.getfloat("busco_run", "evalue")
-            != BaseConfig.DEFAULT_ARGS_VALUES["evalue"]
+            != BuscoConfig.DEFAULT_ARGS_VALUES["evalue"]
         ):
             logger.warning("You are using a custom e-value cutoff")
         return
@@ -507,7 +494,7 @@ class BuscoConfigMain(BuscoConfig, BaseConfig):
         Make sure all mandatory user-provided parameters are present in the config.
         :return:
         """
-        for param in BaseConfig.MANDATORY_USER_PROVIDED_PARAMS:
+        for param in BuscoConfig.MANDATORY_USER_PROVIDED_PARAMS:
             try:
                 value = self.get("busco_run", param)
                 if param == "mode":
@@ -578,11 +565,11 @@ class BuscoConfigMain(BuscoConfig, BaseConfig):
     def _check_allowed_keys(self):
         """ Remove?
         """
-        full_dict = {"busco_run": BaseConfig.PERMITTED_OPTIONS}
+        full_dict = {"busco_run": BuscoConfig.PERMITTED_OPTIONS}
         full_dict.update(
             {
                 dependency: ["path", "command"]
-                for dependency in BaseConfig.DEPENDENCY_SECTIONS
+                for dependency in BuscoConfig.DEPENDENCY_SECTIONS
             }
         )
 

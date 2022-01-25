@@ -95,5 +95,58 @@ TODO: Описать как устроена обработка ошибок
 Как оно работает
 
 - создает папку для скачивания баз данных create_main_download_dir
-- скачивает versions_file с буско file_versions.tsv
+- скачивает versions_file с буско file_versions.tsv, это информация о таксон специфичных моделях буско
+
+### harmonize_auto_lineage_settings
+
+- запускается config.check_lineage_present() и проверяется указал ли пользователь lineage, параметры lineage_dataset и datasets_version, в целом все сводится к проверке что это odb10 база данных по ее имени только
+- если на предыдущем шаге проверка не пройдена, то запускается автоподбор подходящей базы данных, то есть ставится флаг auto-lineage 
+- оно управляется флагами auto-lineage-prok auto-lineage-euk auto-lineage
+
+### После этого запускается BatchRunner или SingleRunner и в нем runner.run()
+
+На первом этапе происходит выбор lineage get_lineage().
+
+Если auto-lineage то оно начинает пытатся определать вызывая self.auto_select_lineage() в результате будет установлен lineage_dataset и parent_dataset (если не вирусы)
+
+### Логика выбора датасата AutoSelectLineage
+
+В зависимости от флагов выбирается из про эу и археи. Передаются все конфиги в класс, ну как везде в буско внутрях, конфиги хранят стейт.
+
+Потому запускается asl.run_auto_selector()
+
+```python
+@log("No lineage specified. Running lineage auto selector.\n", logger)
+def auto_select_lineage(self):
+    from busco.AutoLineage import (
+        AutoSelectLineage,
+    )  # Import statement inside method to avoid circular imports
+
+    asl = AutoSelectLineage(self.config_manager)
+    asl.run_auto_selector()
+    asl.get_lineage_dataset()
+    asl.set_best_match_lineage()
+    lineage_dataset = asl.best_match_lineage_dataset
+    runner = asl.selected_runner
+    type(self).all_runners.extend(asl.runners)
+    asl.reset()
+    return lineage_dataset, runner
+```
+
+После этого запускается run_lineages_list(list), внутри которого для каждого линейджа:
+- создается автоконфиг self.config_manager.load_busco_config_auto(self.current_lineage)
+-- в котором создается директория для запуска
+-- создается копия настроек общих и сслыка на downloading manager
+-- скачивается и распакаковывается и проверяется по md5 датасет линэйджа
+
+
+
+
+
+
+
+
+
+
+
 
