@@ -109,8 +109,8 @@ class BuscoMaster:
                 else SingleRunner(self.config_manager)
             )
             runner.run()
-        except:
-            pass
+        except Exception as e:
+            raise e
 
         # except BuscoError as be:
         #     SingleRunner.log_error(be)
@@ -145,40 +145,40 @@ def _parse_args():
         add_help=True,
     )
 
-#     optional = parser.add_argument_group("optional arguments")
+    optional = parser.add_argument_group("optional arguments")
 
-#     optional.add_argument(
-#         "-i",
-#         "--in",
-#         dest="in",
-#         required=False,
-#         metavar="SEQUENCE_FILE",
-#         help="Input sequence file in FASTA format. "
-#         "Can be an assembled genome or transcriptome (DNA), or protein sequences from an annotated gene set. "
-#         "Also possible to use a path to a directory containing multiple input files.",
-#     )
+    optional.add_argument(
+        "-i",
+        "--in",
+        dest="in",
+        required=False,
+        metavar="SEQUENCE_FILE",
+        help="Input sequence file in FASTA format. "
+        "Can be an assembled genome or transcriptome (DNA), or protein sequences from an annotated gene set. "
+        "Also possible to use a path to a directory containing multiple input files.",
+    )
 
-#     optional.add_argument(
-#         "-o",
-#         "--out",
-#         dest="out",
-#         required=False,
-#         metavar="OUTPUT",
-#         help="Give your analysis run a recognisable short name. "
-#         "Output folders and files will be labelled with this name. WARNING: do not provide a path",
-#     )
+    optional.add_argument(
+        "-o",
+        "--out",
+        dest="out",
+        required=False,
+        metavar="OUTPUT",
+        help="Give your analysis run a recognisable short name. "
+        "Output folders and files will be labelled with this name. WARNING: do not provide a path",
+    )
 
-#     optional.add_argument(
-#         "-m",
-#         "--mode",
-#         dest="mode",
-#         required=False,
-#         metavar="MODE",
-#         help="Specify which BUSCO analysis mode to run.\n"
-#         "There are three valid modes:\n- geno or genome, for genome assemblies (DNA)\n- tran or "
-#         "transcriptome, "
-#         "for transcriptome assemblies (DNA)\n- prot or proteins, for annotated gene sets (protein)",
-#     )
+    optional.add_argument(
+        "-m",
+        "--mode",
+        dest="mode",
+        required=False,
+        metavar="MODE",
+        help="Specify which BUSCO analysis mode to run.\n"
+        "There are three valid modes:\n- geno or genome, for genome assemblies (DNA)\n- tran or "
+        "transcriptome, "
+        "for transcriptome assemblies (DNA)\n- prot or proteins, for annotated gene sets (protein)",
+    )
 
 #     optional.add_argument(
 #         "-l",

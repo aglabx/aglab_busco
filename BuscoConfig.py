@@ -47,7 +47,7 @@ class BaseConfig(ConfigParser):
         "auto-lineage-euk": False,
         "update-data": False,
         "evalue": 1e-3,
-        "limit": 3,
+        "limit": 20,
         "use_augustus": False,
         "long": False,
         "batch_mode": False,
@@ -407,7 +407,7 @@ class BuscoConfigMain(BuscoConfig, BaseConfig):
 
     def validate(self):
         self._check_mandatory_keys_exist()
-#         self._cleanup_config()
+        self._cleanup_config()
 #         self._check_no_previous_run()
 #         self._check_allowed_keys()
 #         self._create_required_paths()
@@ -479,18 +479,18 @@ class BuscoConfigMain(BuscoConfig, BaseConfig):
 #             logger.warning("You are using a custom e-value cutoff")
 #         return
 
-#     def _check_limit_value(self):
-#         """
-#         Check the value of limit. Ensure it is between 1 and 20, otherwise raise BatchFatalError.
-#         :return:
-#         """
-#         limit_val = self.getint("busco_run", "limit")
-#         if limit_val <= 0 or limit_val > 20:
-#             raise BatchFatalError(
-#                 "Limit must be an integer between 1 and 20 (you have used: {}). Note that this parameter "
-#                 "is not needed by the protein mode.".format(limit_val)
-#             )
-#         return
+    def _check_limit_value(self):
+        """
+        Check the value of limit. Ensure it is between 1 and 20, otherwise raise BatchFatalError.
+        :return:
+        """
+        limit_val = self.getint("busco_run", "limit")
+        if limit_val <= 0 or limit_val > 200:
+            raise BatchFatalError(
+                "Limit must be an integer between 1 and 200 (you have used: {}). Note that this parameter "
+                "is not needed by the protein mode.".format(limit_val)
+            )
+        return
 
     @log("Mode is {0}", logger, attr_name="_mode", on_func_exit=True, log_once=True)
     def _check_mandatory_keys_exist(self):
@@ -586,17 +586,17 @@ class BuscoConfigMain(BuscoConfig, BaseConfig):
 #                 logger.warning("Section {} not found".format(section_name))
 #         return
 
-#     def _check_out_value(self):
-#         """
-#         Prevent the user form using "/" in out name
-#         :return:
-#         """
-#         if "/" in self.get("busco_run", "out"):
-#             raise BatchFatalError(
-#                 "Please do not provide a full path in --out parameter, no slash. "
-#                 "Use out_path in the config.ini file to specify the full path."
-#             )
-#         return
+    def _check_out_value(self):
+        """
+        Prevent the user form using "/" in out name
+        :return:
+        """
+        if "/" in self.get("busco_run", "out"):
+            raise BatchFatalError(
+                "Please do not provide a full path in --out parameter, no slash. "
+                "Use out_path in the config.ini file to specify the full path."
+            )
+        return
 
 #     def _check_required_input_exists(self):
 #         """
@@ -639,15 +639,15 @@ class BuscoConfigMain(BuscoConfig, BaseConfig):
 
 #         return
 
-#     def _cleanup_config(self):
-#         """
-#         Collection of housekeeping functions to ensure configuration is suitable.
-#         :return:
-#         """
-#         self._check_out_value()
-#         self._check_limit_value()
-#         self._check_evalue()
-#         self._expand_all_paths()
+    def _cleanup_config(self):
+        """
+        Collection of housekeeping functions to ensure configuration is suitable.
+        :return:
+        """
+        self._check_out_value()
+        self._check_limit_value()
+        self._check_evalue()
+        self._expand_all_paths()
 
 #     @staticmethod
 #     @log(
