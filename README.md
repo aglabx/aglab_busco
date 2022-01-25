@@ -24,4 +24,48 @@ BuscoLogger.py - декоратор логгер и сам логгер. Я вы
 
 BatchRunner(self.config_manager) и SingleRunner(self.config_manager) в зависимости от флага batch_mode в конфига (пока не понятно как он ставится).
  
+С конфигами они адски намудрили.
+
+Базовые параметры:
+
+```
+DEFAULT_ARGS_VALUES = {
+        "out_path": os.getcwd(),
+        "cpu": 1,
+        "force": False,
+        "restart": False,
+        "quiet": False,
+        "download_path": os.path.join(os.getcwd(), "busco_downloads"),
+        "datasets_version": "odb10",
+        "offline": False,
+        "download_base_url": "https://busco-data.ezlab.org/v5/data/",
+        "auto-lineage": False,
+        "auto-lineage-prok": False,
+        "auto-lineage-euk": False,
+        "update-data": False,
+        "evalue": 1e-3,
+        "limit": 3,
+        "use_augustus": False,
+        "long": False,
+        "batch_mode": False,
+        "tar": False,
+}
+
+DEPENDENCY_SECTIONS = {
+    "tblastn",
+    "makeblastdb",
+    "prodigal",
+    "sepp",
+    "metaeuk",
+    "augustus",
+    "etraining",
+    "gff2gbSmallDNA.pl",
+    "new_species.pl",
+    "optimize_augustus.pl",
+    "hmmsearch",
+}
+```
+
+Есть BaseConfig(ConfigParser) потом есть PseudoConfig(BaseConfig) потом есть BuscoConfig(ConfigParser, metaclass=ABCMeta) и еще BuscoConfigAuto(BuscoConfig) 
+и еще BuscoConfigMain(BuscoConfig, BaseConfig). У кого-то классы головного мозга случились.
 

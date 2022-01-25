@@ -23,7 +23,7 @@ import argparse
 from argparse import RawTextHelpFormatter
 import aglab_busco
 # from busco.BuscoRunner import AnalysisRunner, BatchRunner, SingleRunner
-# from busco.Exceptions import BatchFatalError, BuscoError
+from aglab_busco.Exceptions import BatchFatalError, BuscoError
 from aglab_busco.BuscoLogger import BuscoLogger
 from aglab_busco.BuscoLogger import LogDecorator as log
 from aglab_busco.ConfigManager import BuscoConfigManager
@@ -34,8 +34,8 @@ from aglab_busco.ConfigManager import BuscoConfigManager
 #     DirectDownload,
 # )
 # from busco.ConfigManager import BuscoConfigMain
-
 # # from busco.busco_tools.Toolset import ToolException
+
 import sys
 import time
 
@@ -109,20 +109,22 @@ class BuscoMaster:
                 else SingleRunner(self.config_manager)
             )
             runner.run()
+        except:
+            pass
 
-        except BuscoError as be:
-            SingleRunner.log_error(be)
-            raise SystemExit(1)
+        # except BuscoError as be:
+        #     SingleRunner.log_error(be)
+        #     raise SystemExit(1)
 
-        except BatchFatalError as bfe:
-            SingleRunner.log_error(bfe)
-            raise SystemExit(1)
+        # except BatchFatalError as bfe:
+        #     SingleRunner.log_error(bfe)
+        #     raise SystemExit(1)
 
-        finally:
-            try:
-                AnalysisRunner.move_log_file(self.config)
-            except:
-                pass
+        # finally:
+        #     try:
+        #         AnalysisRunner.move_log_file(self.config)
+        #     except:
+        #         pass
 
 
 @log("Command line: {}".format(" ".join(sys.argv[:])), logger, debug=True)

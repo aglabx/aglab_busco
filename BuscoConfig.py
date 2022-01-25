@@ -15,121 +15,169 @@ from configparser import ConfigParser
 from configparser import NoOptionError, NoSectionError
 from configparser import ParsingError
 from configparser import DuplicateOptionError
-from aglab_busco.BuscoLogger import BuscoLogger
-from aglab_busco.BuscoLogger import LogDecorator as log
-# from busco.Exceptions import BatchFatalError
-# from abc import ABCMeta, abstractmethod
-# from busco.BuscoDownloadManager import BuscoDownloadManager
 import os
 import shutil
 import glob
 import pprint
+from aglab_busco.BuscoLogger import BuscoLogger
+from aglab_busco.BuscoLogger import LogDecorator as log
+from aglab_busco.Exceptions import BatchFatalError
+# from busco.BuscoDownloadManager import BuscoDownloadManager
+
 
 logger = BuscoLogger.get_logger(__name__)
 
 
-# class BaseConfig(ConfigParser):
+class BaseConfig(ConfigParser):
 
-#     DEFAULT_ARGS_VALUES = {
-#         "out_path": os.getcwd(),
-#         "cpu": 1,
-#         "force": False,
-#         "restart": False,
-#         "quiet": False,
-#         "download_path": os.path.join(os.getcwd(), "busco_downloads"),
-#         "datasets_version": "odb10",
-#         "offline": False,
-#         "download_base_url": "https://busco-data.ezlab.org/v5/data/",
-#         "auto-lineage": False,
-#         "auto-lineage-prok": False,
-#         "auto-lineage-euk": False,
-#         "update-data": False,
-#         "evalue": 1e-3,
-#         "limit": 3,
-#         "use_augustus": False,
-#         "long": False,
-#         "batch_mode": False,
-#         "tar": False,
-#     }
+    MANDATORY_USER_PROVIDED_PARAMS = ["in", "out", "mode"]
 
-#     DEPENDENCY_SECTIONS = {
-#         "tblastn",
-#         "makeblastdb",
-#         "prodigal",
-#         "sepp",
-#         "metaeuk",
-#         "augustus",
-#         "etraining",
-#         "gff2gbSmallDNA.pl",
-#         "new_species.pl",
-#         "optimize_augustus.pl",
-#         "hmmsearch",
-#     }
+    DEFAULT_ARGS_VALUES = {
+        "out_path": os.getcwd(),
+        "cpu": 1,
+        "force": False,
+        "restart": False,
+        "quiet": False,
+        "download_path": os.path.join(os.getcwd(), "busco_downloads"),
+        "datasets_version": "odb10",
+        "offline": False,
+        "download_base_url": "https://busco-data.ezlab.org/v5/data/",
+        "auto-lineage": False,
+        "auto-lineage-prok": False,
+        "auto-lineage-euk": False,
+        "update-data": False,
+        "evalue": 1e-3,
+        "limit": 3,
+        "use_augustus": False,
+        "long": False,
+        "batch_mode": False,
+        "tar": False,
+    }
 
-#     PERMITTED_OPTIONS = [
-#         "in",
-#         "out",
-#         "out_path",
-#         "mode",
-#         "auto-lineage",
-#         "auto-lineage-prok",
-#         "auto-lineage-euk",
-#         "cpu",
-#         "force",
-#         "restart",
-#         "download_path",
-#         "datasets_version",
-#         "quiet",
-#         "offline",
-#         "long",
-#         "augustus_parameters",
-#         "augustus_species",
-#         "download_base_url",
-#         "lineage_dataset",
-#         "update-data",
-#         "metaeuk_parameters",
-#         "metaeuk_rerun_parameters",
-#         "evalue",
-#         "limit",
-#         "use_augustus",
-#         "batch_mode",
-#         "tar",
-#     ]
+    DEPENDENCY_SECTIONS = {
+        "tblastn",
+        "makeblastdb",
+        "prodigal",
+        "sepp",
+        "metaeuk",
+        "augustus",
+        "etraining",
+        "gff2gbSmallDNA.pl",
+        "new_species.pl",
+        "optimize_augustus.pl",
+        "hmmsearch",
+    }
 
-#     def __init__(self):
-#         super().__init__()
-#         config_dict = {"busco_run": type(self).DEFAULT_ARGS_VALUES}
-#         config_dict.update(
-#             {
-#                 tool: {"path": "", "command": ""}
-#                 for tool in type(self).DEPENDENCY_SECTIONS
-#             }
-#         )
-#         self.read_dict(config_dict)
+    PERMITTED_OPTIONS = [
+        "in",
+        "out",
+        "out_path",
+        "mode",
+        "auto-lineage",
+        "auto-lineage-prok",
+        "auto-lineage-euk",
+        "cpu",
+        "force",
+        "restart",
+        "download_path",
+        "datasets_version",
+        "quiet",
+        "offline",
+        "long",
+        "augustus_parameters",
+        "augustus_species",
+        "download_base_url",
+        "lineage_dataset",
+        "update-data",
+        "metaeuk_parameters",
+        "metaeuk_rerun_parameters",
+        "evalue",
+        "limit",
+        "use_augustus",
+        "batch_mode",
+        "tar",
+    ]
 
-#     def _load_config_file(self):
-#         """
-#         Load config file using ConfigParser.
-#         :return:
-#         """
-#         try:
-#             with open(self.conf_file) as cfg_file:
-#                 self.read_file(cfg_file)
-#         except IOError:
-#             raise BatchFatalError(
-#                 "Config file {} cannot be found".format(self.conf_file)
-#             )
-#         except ParsingError:
-#             raise BatchFatalError(
-#                 "Unable to parse the contents of config file {}".format(self.conf_file)
-#             )
-#         except DuplicateOptionError:
-#             raise BatchFatalError(
-#                 "Duplicated entry in config file {}. Unable to load configuration.".format(
-#                     self.conf_file
-#                 )
-#             )
-#         return
+    FORBIDDEN_HEADER_CHARS = [
+        "ç",
+        "¬",
+        "¢",
+        "´",
+        "ê",
+        "î",
+        "ô",
+        "ŵ",
+        "ẑ",
+        "û",
+        "â",
+        "ŝ",
+        "ĝ",
+        "ĥ",
+        "ĵ",
+        "ŷ",
+        "ĉ",
+        "é",
+        "ï",
+        "ẅ",
+        "ë",
+        "ẅ",
+        "ë",
+        "ẗ,",
+        "ü",
+        "í",
+        "ö",
+        "ḧ",
+        "é",
+        "ÿ",
+        "ẍ",
+        "è",
+        "é",
+        "à",
+        "ä",
+        "¨",
+        "€",
+        "£",
+        "á",
+    ]
+
+    FORBIDDEN_HEADER_CHARS_BEFORE_SPLIT = ["/", '"']
+
+    HMMER_VERSION = 3.1
+
+    def __init__(self):
+        super().__init__()
+        config_dict = {"busco_run": type(self).DEFAULT_ARGS_VALUES}
+        config_dict.update(
+            {
+                tool: {"path": "", "command": ""}
+                for tool in type(self).DEPENDENCY_SECTIONS
+            }
+        )
+        self.read_dict(config_dict)
+
+    def _load_config_file(self):
+        """
+        Load config file using ConfigParser.
+        :return:
+        """
+        try:
+            with open(self.conf_file) as cfg_file:
+                self.read_file(cfg_file)
+        except IOError:
+            raise BatchFatalError(
+                "Config file {} cannot be found".format(self.conf_file)
+            )
+        except ParsingError:
+            raise BatchFatalError(
+                "Unable to parse the contents of config file {}".format(self.conf_file)
+            )
+        except DuplicateOptionError:
+            raise BatchFatalError(
+                "Duplicated entry in config file {}. Unable to load configuration.".format(
+                    self.conf_file
+                )
+            )
+        return
 
 #     def _init_downloader(self):
 #         """
@@ -139,30 +187,27 @@ logger = BuscoLogger.get_logger(__name__)
 #         self.downloader = BuscoDownloadManager(self)
 #         return
 
-#     def _update_config_with_args(self, args):
-#         """
-#         Include command line arguments in config. Overwrite any values given in the config file.
-#         :param args: Dictionary of parsed command line arguments. To see full list, inspect run_BUSCO_unittests.py or
-#         type busco -h
-#         :type args: dict
-#         :return:
-#         """
-#         for key, val in args.items():
-#             if key in type(self).PERMITTED_OPTIONS:
-#                 if val is not None and type(val) is not bool:
-#                     self.set("busco_run", key, str(val))
-#                 elif val:  # if True
-#                     self.set("busco_run", key, "True")
-#         return
+    def _update_config_with_args(self, args):
+        """
+        Include command line arguments in config. Overwrite any values given in the config file.
+        :param args: Dictionary of parsed command line arguments. To see full list, inspect run_BUSCO_unittests.py or
+        type busco -h
+        :type args: dict
+        :return:
+        """
+        for key, val in args.items():
+            if key in type(self).PERMITTED_OPTIONS:
+                if val is not None and type(val) is not bool:
+                    self.set("busco_run", key, str(val))
+                elif val:
+                    self.set("busco_run", key, "True")
+        return
 
 
-# class PseudoConfig(BaseConfig):
-#     def __init__(self, conf_file, params):
-#         super().__init__()
-#         self.conf_file = conf_file
-#         self.params = params
-#         self.params = params
+class PseudoConfig(BaseConfig):
 
+
+    pass
 #     def load(self):
 #         if self.conf_file != "local environment":
 #             self._load_config_file()
@@ -219,62 +264,15 @@ logger = BuscoLogger.get_logger(__name__)
 #             self.set("busco_run", "update-data", "True")
 
 
-# class BuscoConfig(ConfigParser, metaclass=ABCMeta):
-#     """
-#     This class extends busco.PipeConfig to read the config.ini file. Furthermore, it uses extra args that can be
-#     provided through command line and information available in the dataset.cfg file to produce a single instance
-#     containing all correct parameters to be injected to a busco.BuscoAnalysis instance.
-#     """
+class BuscoConfig(ConfigParser):
+    """
+    This class extends busco.ConfigParser to read the config.ini file. Furthermore, it uses extra args that can be
+    provided through command line and information available in the dataset.cfg file to produce a single instance
+    containing all correct parameters to be injected to a busco.BuscoAnalysis instance.
+    """
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
 
-#     FORBIDDEN_HEADER_CHARS = [
-#         "ç",
-#         "¬",
-#         "¢",
-#         "´",
-#         "ê",
-#         "î",
-#         "ô",
-#         "ŵ",
-#         "ẑ",
-#         "û",
-#         "â",
-#         "ŝ",
-#         "ĝ",
-#         "ĥ",
-#         "ĵ",
-#         "ŷ",
-#         "ĉ",
-#         "é",
-#         "ï",
-#         "ẅ",
-#         "ë",
-#         "ẅ",
-#         "ë",
-#         "ẗ,",
-#         "ü",
-#         "í",
-#         "ö",
-#         "ḧ",
-#         "é",
-#         "ÿ",
-#         "ẍ",
-#         "è",
-#         "é",
-#         "à",
-#         "ä",
-#         "¨",
-#         "€",
-#         "£",
-#         "á",
-#     ]
-
-#     FORBIDDEN_HEADER_CHARS_BEFORE_SPLIT = ["/", '"']
-
-#     HMMER_VERSION = 3.1
-
-#     def __init__(self, **kwargs):
-
-#         super().__init__(**kwargs)
 
 #     def download_lineage_file(self, lineage):
 #         """
@@ -336,15 +334,6 @@ logger = BuscoLogger.get_logger(__name__)
 #             )
 #         return
 
-#     @abstractmethod
-#     def _create_required_paths(self, main_out):
-#         """
-#         Mandatory child class method. Overridden by child classes.
-#         :return:
-#         """
-#         if not os.path.exists(main_out):
-#             os.makedirs(main_out)
-
 #     def set_results_dirname(self, lineage):
 #         self.set(
 #             "busco_run",
@@ -354,12 +343,13 @@ logger = BuscoLogger.get_logger(__name__)
 #         return
 
 
-# class BuscoConfigAuto(BuscoConfig):
-#     def __init__(self, config, lineage, **kwargs):
-#         super().__init__(**kwargs)
-#         self._propagate_config(config)
-#         self.load_dataset(lineage)
-#         self._create_required_paths()
+class BuscoConfigAuto(BaseConfig):
+
+    def __init__(self, config, lineage, **kwargs):
+        super().__init__(**kwargs)
+        self._propagate_config(config)
+        self.load_dataset(lineage)
+        self._create_required_paths()
 
 #     def _create_required_paths(self):
 #         """
@@ -384,29 +374,29 @@ logger = BuscoLogger.get_logger(__name__)
 #         return
 
 
-# class BuscoConfigMain(BuscoConfig, BaseConfig):
+class BuscoConfigMain(BuscoConfig, BaseConfig):
 
-#     MANDATORY_USER_PROVIDED_PARAMS = ["in", "out", "mode"]
 
-#     def __init__(self, conf_file, params, **kwargs):
-#         """
-#         :param conf_file: a path to a config.ini file
-#         :type conf_file: str
-#         :param params: key and values matching BUSCO parameters to override config.ini values
-#         :type params: dict
-#         """
-#         super().__init__(**kwargs)
-#         self.conf_file = conf_file
-#         self.params = params
-#         self.main_out = None
-#         self._input_filepath = None
+    def __init__(self, conf_file, params):
+        """
+        :param conf_file: a path to a config.ini file
+        :type conf_file: str
+        :param params: key and values matching BUSCO parameters to override config.ini values
+        :type params: dict
+        """
+        super().__init__()
+        self.conf_file = conf_file
+        self.params = params
+        self.main_out = None
+        self._input_filepath = None
 
-#     def configure(self):
-#         if self.conf_file != "local environment":
-#             self._load_config_file()
-#         # Update the config with args provided by the user, else keep config
-#         self._update_config_with_args(self.params)
-#         self._check_value_constraints()
+    def configure(self):
+        if self.conf_file != "local environment":
+            self._load_config_file()
+        # Update the config with args provided by the user, else keep config
+        self._update_config_with_args(self.params)
+        self._check_value_constraints()
+
 
 #     @classmethod
 #     def merge_two_dicts(cls, x, y):
@@ -415,8 +405,8 @@ logger = BuscoLogger.get_logger(__name__)
 #         z.update(y)
 #         return z
 
-#     def validate(self):
-#         self._check_mandatory_keys_exist()
+    def validate(self):
+        self._check_mandatory_keys_exist()
 #         self._cleanup_config()
 #         self._check_no_previous_run()
 #         self._check_allowed_keys()
@@ -502,79 +492,79 @@ logger = BuscoLogger.get_logger(__name__)
 #             )
 #         return
 
-#     @log("Mode is {0}", logger, attr_name="_mode", on_func_exit=True, log_once=True)
-#     def _check_mandatory_keys_exist(self):
-#         """
-#         Make sure all mandatory user-provided parameters are present in the config.
-#         :return:
-#         """
-#         for param in type(self).MANDATORY_USER_PROVIDED_PARAMS:
-#             try:
-#                 value = self.get("busco_run", param)
-#                 if param == "mode":
-#                     synonyms = {
-#                         "genome": [
-#                             "genome",
-#                             "geno",
-#                             "genomes",
-#                             "Genome",
-#                             "Genomes",
-#                             "Geno",
-#                         ],
-#                         "transcriptome": [
-#                             "transcriptome",
-#                             "tran",
-#                             "transcriptomes",
-#                             "trans",
-#                             "Transcriptome",
-#                             "Transcriptomes",
-#                             "Tran",
-#                             "Trans",
-#                         ],
-#                         "proteins": [
-#                             "proteins",
-#                             "prot",
-#                             "protein",
-#                             "Proteins",
-#                             "Protein",
-#                             "Prot",
-#                             "proteome",
-#                             "proteomes",
-#                             "Proteome",
-#                             "Proteomes",
-#                         ],
-#                     }
-#                     if value not in list(
-#                         synonyms["genome"]
-#                         + synonyms["transcriptome"]
-#                         + synonyms["proteins"]
-#                     ):
-#                         raise BatchFatalError(
-#                             "Unknown mode {}.\n'Mode' parameter must be one of "
-#                             "['genome', 'transcriptome', 'proteins']".format(value)
-#                         )
-#                     if value in synonyms["genome"]:
-#                         self.set("busco_run", "mode", "genome")
-#                     elif value in synonyms["transcriptome"]:
-#                         self.set("busco_run", "mode", "transcriptome")
-#                     elif value in synonyms["proteins"]:
-#                         self.set("busco_run", "mode", "proteins")
+    @log("Mode is {0}", logger, attr_name="_mode", on_func_exit=True, log_once=True)
+    def _check_mandatory_keys_exist(self):
+        """
+        Make sure all mandatory user-provided parameters are present in the config.
+        :return:
+        """
+        for param in type(self).MANDATORY_USER_PROVIDED_PARAMS:
+            try:
+                value = self.get("busco_run", param)
+                if param == "mode":
+                    synonyms = {
+                        "genome": [
+                            "genome",
+                            "geno",
+                            "genomes",
+                            "Genome",
+                            "Genomes",
+                            "Geno",
+                        ],
+                        "transcriptome": [
+                            "transcriptome",
+                            "tran",
+                            "transcriptomes",
+                            "trans",
+                            "Transcriptome",
+                            "Transcriptomes",
+                            "Tran",
+                            "Trans",
+                        ],
+                        "proteins": [
+                            "proteins",
+                            "prot",
+                            "protein",
+                            "Proteins",
+                            "Protein",
+                            "Prot",
+                            "proteome",
+                            "proteomes",
+                            "Proteome",
+                            "Proteomes",
+                        ],
+                    }
+                    if value not in list(
+                        synonyms["genome"]
+                        + synonyms["transcriptome"]
+                        + synonyms["proteins"]
+                    ):
+                        raise BatchFatalError(
+                            "Unknown mode {}.\n'Mode' parameter must be one of "
+                            "['genome', 'transcriptome', 'proteins']".format(value)
+                        )
+                    if value in synonyms["genome"]:
+                        self.set("busco_run", "mode", "genome")
+                    elif value in synonyms["transcriptome"]:
+                        self.set("busco_run", "mode", "transcriptome")
+                    elif value in synonyms["proteins"]:
+                        self.set("busco_run", "mode", "proteins")
 
-#                     self._mode = self.get("busco_run", "mode")
+                    self._mode = self.get("busco_run", "mode")
 
-#                 if param == "out":
-#                     if value == "":
-#                         raise BatchFatalError(
-#                             "Please specify an output name for the BUSCO run. "
-#                             "This can be done using the -o flag or in the config file"
-#                         )
-#             except NoOptionError:
-#                 raise BatchFatalError(
-#                     'The parameter "{} (--{})" was not provided. '
-#                     "Please add it in the config file or provide it "
-#                     "through the command line".format(param, param)
-#                 )
-#         return
+                if param == "out":
+                    if value == "":
+                        raise BatchFatalError(
+                            "Please specify an output name for the BUSCO run. "
+                            "This can be done using the -o flag or in the config file"
+                        )
+            except NoOptionError:
+                raise BatchFatalError(
+                    'The parameter "{} (--{})" was not provided. '
+                    "Please add it in the config file or provide it "
+                    "through the command line".format(param, param)
+                )
+        return
 
 #     def _check_allowed_keys(self):
 #         full_dict = {"busco_run": type(self).PERMITTED_OPTIONS}
@@ -695,32 +685,32 @@ logger = BuscoLogger.get_logger(__name__)
 
 #         return
 
-#     def _check_value_constraints(self):
-#         """
-#         :return:
-#         """
+    def _check_value_constraints(self):
+        """
+        :return:
+        """
 
-#         if self.getboolean("busco_run", "auto-lineage-prok") or self.getboolean(
-#             "busco_run", "auto-lineage-euk"
-#         ):
-#             self.set("busco_run", "auto-lineage", "True")
+        if self.getboolean("busco_run", "auto-lineage-prok") or self.getboolean(
+            "busco_run", "auto-lineage-euk"
+        ):
+            self.set("busco_run", "auto-lineage", "True")
 
-#         if self.getboolean("busco_run", "auto-lineage-prok") and self.getboolean(
-#             "busco_run", "auto-lineage-euk"
-#         ):
-#             logger.warning(
-#                 "You have specified both --auto-lineage-prok and --auto-lineage-euk. This has the same behaviour as --auto-lineage."
-#             )
-#             self.set("busco_run", "auto-lineage-prok", "False")
-#             self.set("busco_run", "auto-lineage-euk", "False")
+        if self.getboolean("busco_run", "auto-lineage-prok") and self.getboolean(
+            "busco_run", "auto-lineage-euk"
+        ):
+            logger.warning(
+                "You have specified both --auto-lineage-prok and --auto-lineage-euk. This has the same behaviour as --auto-lineage."
+            )
+            self.set("busco_run", "auto-lineage-prok", "False")
+            self.set("busco_run", "auto-lineage-euk", "False")
 
-#         return
+        return
 
 
-# # Code taken from https://dave.dkjones.org/posts/2013/pretty-print-log-python/
-# class PrettyLog:
-#     def __init__(self, obj):
-#         self.obj = obj
+# Code taken from https://dave.dkjones.org/posts/2013/pretty-print-log-python/
+class PrettyLog:
+    def __init__(self, obj):
+        self.obj = obj
 
-#     def __repr__(self):
-#         return pprint.pformat(self.obj)
+    def __repr__(self):
+        return pprint.pformat(self.obj)
