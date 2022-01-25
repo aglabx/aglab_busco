@@ -69,3 +69,9 @@ DEPENDENCY_SECTIONS = {
 Есть BaseConfig(ConfigParser) потом есть PseudoConfig(BaseConfig) потом есть BuscoConfig(ConfigParser, metaclass=ABCMeta) и еще BuscoConfigAuto(BuscoConfig) 
 и еще BuscoConfigMain(BuscoConfig, BaseConfig). У кого-то классы головного мозга случились.
 
+Я чуть посокращал конфиг, как логика устроена:
+
+- засовываем все параметры в библиотечный configparser и прописываем дефолтные значения, потом добавляем из конфг файла значение и из параметров
+- потому проверка указали ли прокариот или эукариот как линэйдж, ну тут она реально не к месту (тут это под соусом _check_value_constraints)
+- потом validate разные
+- проверяем что есть все обязательные параметры
