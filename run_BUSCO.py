@@ -26,7 +26,7 @@ import aglab_busco
 # from busco.Exceptions import BatchFatalError, BuscoError
 from aglab_busco.BuscoLogger import BuscoLogger
 from aglab_busco.BuscoLogger import LogDecorator as log
-# from busco.ConfigManager import BuscoConfigManager
+from aglab_busco.ConfigManager import BuscoConfigManager
 # from busco.Actions import (
 #     ListLineagesAction,
 #     CleanHelpAction,
@@ -43,17 +43,18 @@ import time
 logger = BuscoLogger.get_logger(__name__)
 
 
-# @log(
-#     "***** Start a BUSCO v{} analysis, current time: {} *****".format(
-#         busco.__version__, time.strftime("%m/%d/%Y %H:%M:%S")
-#     ),
-#     logger,
-# )
-# class BuscoMaster:
-#     def __init__(self, params):
-#         self.params = params
-#         self.config_manager = BuscoConfigManager(self.params)
-#         self.config = self.config_manager.config_main
+@log(
+    "***** Start a BUSCO v{} analysis, current time: {} *****".format(
+        aglab_busco.__version__, time.strftime("%m/%d/%Y %H:%M:%S")
+    ),
+    logger,
+)
+class BuscoMaster:
+
+    def __init__(self, params):
+        self.params = params
+        self.config_manager = BuscoConfigManager(self.params)
+        self.config = self.config_manager.config_main
 
 #     def harmonize_auto_lineage_settings(self):
 #         if not self.config.check_lineage_present():
@@ -86,42 +87,42 @@ logger = BuscoLogger.get_logger(__name__)
 #             self.config.set("busco_run", "auto-lineage-euk", "False")
 #         return
 
-#     def load_config(self):
-#         """
-#         Load a busco config file that will figure out all the params from all sources
-#         i.e. provided config file, dataset cfg, and user args
-#         """
-#         self.config_manager.load_busco_config_main(sys.argv)
-#         self.config = self.config_manager.config_main
+    def load_config(self):
+        """
+        Load a busco config file that will figure out all the params from all sources
+        i.e. provided config file, dataset cfg, and user args
+        """
+        self.config_manager.load_busco_config_main(sys.argv)
+        self.config = self.config_manager.config_main
 
-#     def check_batch_mode(self):
-#         return self.config.getboolean("busco_run", "batch_mode")
+    def check_batch_mode(self):
+        return self.config.getboolean("busco_run", "batch_mode")
 
-#     def run(self):
-#         # Need to add try/except blocks, distinguishing between run fatal and batch fatal
-#         try:
-#             self.load_config()
-#             self.harmonize_auto_lineage_settings()
-#             runner = (
-#                 BatchRunner(self.config_manager)
-#                 if self.check_batch_mode()
-#                 else SingleRunner(self.config_manager)
-#             )
-#             runner.run()
+    def run(self):
+        # Need to add try/except blocks, distinguishing between run fatal and batch fatal
+        try:
+            self.load_config()
+            self.harmonize_auto_lineage_settings()
+            runner = (
+                BatchRunner(self.config_manager)
+                if self.check_batch_mode()
+                else SingleRunner(self.config_manager)
+            )
+            runner.run()
 
-#         except BuscoError as be:
-#             SingleRunner.log_error(be)
-#             raise SystemExit(1)
+        except BuscoError as be:
+            SingleRunner.log_error(be)
+            raise SystemExit(1)
 
-#         except BatchFatalError as bfe:
-#             SingleRunner.log_error(bfe)
-#             raise SystemExit(1)
+        except BatchFatalError as bfe:
+            SingleRunner.log_error(bfe)
+            raise SystemExit(1)
 
-#         finally:
-#             try:
-#                 AnalysisRunner.move_log_file(self.config)
-#             except:
-#                 pass
+        finally:
+            try:
+                AnalysisRunner.move_log_file(self.config)
+            except:
+                pass
 
 
 @log("Command line: {}".format(" ".join(sys.argv[:])), logger, debug=True)
@@ -133,14 +134,13 @@ def _parse_args():
     """
 
     parser = argparse.ArgumentParser(
-        description="Welcome to BUSCO {}: the Benchmarking Universal Single-Copy Ortholog assessment tool.\n"
-        "For more detailed usage information, please review the README file provided with "
-        "this distribution and the BUSCO user guide. Visit this page https://gitlab.com/ezlab/busco#how-to-cite-busco to see how to cite BUSCO".format(
+        description="Welcome to AGLAB version of BUSCO {}: the Benchmarking Universal Single-Copy Ortholog assessment tool.\n"
+        .format(
             aglab_busco.__version__
         ),
         usage="busco -i [SEQUENCE_FILE] -l [LINEAGE] -o [OUTPUT_NAME] -m [MODE] [OTHER OPTIONS]",
         formatter_class=RawTextHelpFormatter,
-        add_help=False,
+        add_help=True,
     )
 
 #     optional = parser.add_argument_group("optional arguments")
@@ -411,7 +411,7 @@ def _parse_args():
 #         version="BUSCO {}".format(busco.__version__),
 #     )
 
-#     return vars(parser.parse_args())
+    return vars(parser.parse_args())
 
 
 def main():
@@ -422,8 +422,8 @@ def main():
     :raises SystemExit: if any errors occur
     """
     params = _parse_args()
-#     busco_run = BuscoMaster(params)
-#     busco_run.run()
+    busco_run = BuscoMaster(params)
+    busco_run.run()
 
 
 # Entry point
