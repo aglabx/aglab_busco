@@ -66,6 +66,8 @@ DEPENDENCY_SECTIONS = {
 }
 ```
 
+TODO: Описать как устроена обработка ошибок
+
 Есть BaseConfig(ConfigParser) потом есть PseudoConfig(BaseConfig) потом есть BuscoConfig(ConfigParser, metaclass=ABCMeta) и еще BuscoConfigAuto(BuscoConfig) 
 и еще BuscoConfigMain(BuscoConfig, BaseConfig). У кого-то классы головного мозга случились.
 
@@ -73,12 +75,25 @@ DEPENDENCY_SECTIONS = {
 
 - засовываем все параметры в библиотечный configparser и прописываем дефолтные значения, потом добавляем из конфг файла значение и из параметров
 - потому проверка указали ли прокариот или эукариот как линэйдж, ну тут она реально не к месту (тут это под соусом _check_value_constraints)
-- потом validate разные
 - проверяем что есть все обязательные параметры
 - проверяем что в аутпут пути нет слешей
 - что параметр limit между 0 и 20 (check_limit_value). Это сколько он кандидатов рассматривает, по дефолту это 3. Для аннотации генов это должно быть значительно больше!!! Я границы поставил 0 200 и дефолтное 20.
 - предупредить о странным evalue (check_evalue). Дефолтное 1e-3.
 - expand_all_paths ну понятно но это не чек
 - проверка следов предыдущего запуска check_no_previous_run, если force то папку будет удалена, если реран то перезапущена или буско убит
-- 
+- после этого check_allowed_keys - похоже проверка того что уже было проверена ранее, возможно можно убрать
+- создание папки аутпута и проверка существования инпута check_required_input_exists
+- check_batch_mode проверяет папка или файл на входе если папка то включает батч мод
+- init_downloader иницилизирует BuscoDownloadManager 
+- и финально log_config вывести в красивом виде настройки
+
+### Инициация BuscoDownloadManager
+
+Он управляется параметрами offline update-data download_base_url download_path
+
+
+Как оно работает
+
+- создает папку для скачивания баз данных create_main_download_dir
+- скачивает versions_file с буско file_versions.tsv
 

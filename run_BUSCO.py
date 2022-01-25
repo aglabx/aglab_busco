@@ -295,15 +295,15 @@ def _parse_args():
         ),
     )
 
-#     optional.add_argument(
-#         "-f",
-#         "--force",
-#         action="store_true",
-#         required=False,
-#         dest="force",
-#         help="Force rewriting of existing files. "
-#         "Must be used when output files with the provided name already exist.",
-#     )
+    optional.add_argument(
+        "-f",
+        "--force",
+        action="store_true",
+        required=False,
+        dest="force",
+        help="Force rewriting of existing files. "
+        "Must be used when output files with the provided name already exist.",
+    )
 
     # optional.add_argument(
     #     "-h", "--help", action=CleanHelpAction, help="Show this help message and exit"

@@ -22,8 +22,7 @@ import pprint
 from aglab_busco.BuscoLogger import BuscoLogger
 from aglab_busco.BuscoLogger import LogDecorator as log
 from aglab_busco.Exceptions import BatchFatalError
-# from busco.BuscoDownloadManager import BuscoDownloadManager
-
+from aglab_busco.BuscoDownloadManager import BuscoDownloadManager
 
 logger = BuscoLogger.get_logger(__name__)
 
@@ -33,11 +32,12 @@ def confirmation_decorator(message):
     def wrap(f):
         def wrapped_f(*args, **kwargs):
             logger.warning(message)
-            confirm_message = '>>> Please, confirm this action (no)? '
-            if input(confirm_message) in ["y", "Y", "yes", "Yes"]:
-                return f(*args, **kwargs)
-            else:
-                return lambda x: None
+            # confirm_message = '>>> Please, confirm this action (no)? '
+            # if input(confirm_message) in ["y", "Y", "yes", "Yes"]:
+            #     return f(*args, **kwargs)
+            # else:
+            #     return lambda x: None
+            return f(*args, **kwargs)
         return wrapped_f
     return wrap
 
@@ -159,11 +159,11 @@ class BaseConfig(ConfigParser):
 
     def __init__(self):
         super().__init__()
-        config_dict = {"busco_run": type(self).DEFAULT_ARGS_VALUES}
+        config_dict = {"busco_run": BaseConfig.DEFAULT_ARGS_VALUES}
         config_dict.update(
             {
                 tool: {"path": "", "command": ""}
-                for tool in type(self).DEPENDENCY_SECTIONS
+                for tool in BaseConfig.DEPENDENCY_SECTIONS
             }
         )
         self.read_dict(config_dict)
@@ -192,13 +192,12 @@ class BaseConfig(ConfigParser):
             )
         return
 
-#     def _init_downloader(self):
-#         """
-#         Initialize BuscoDownloadManager to control any file downloads from the BUSCO server.
-#         :return:
-#         """
-#         self.downloader = BuscoDownloadManager(self)
-#         return
+    def _init_downloader(self):
+        """
+        Initialize BuscoDownloadManager to control any file downloads from the BUSCO server.
+        :return:
+        """
+        self.downloader = BuscoDownloadManager(self)
 
     def _update_config_with_args(self, args):
         """
@@ -209,18 +208,25 @@ class BaseConfig(ConfigParser):
         :return:
         """
         for key, val in args.items():
-            if key in type(self).PERMITTED_OPTIONS:
+            if key in BaseConfig.PERMITTED_OPTIONS:
                 if val is not None and type(val) is not bool:
                     self.set("busco_run", key, str(val))
                 elif val:
                     self.set("busco_run", key, "True")
-        return
+
+    def _create_required_paths(self, main_out):
+        """
+        :return:
+        """
+        if not os.path.exists(main_out):
+            os.makedirs(main_out)
 
 
 class PseudoConfig(BaseConfig):
 
 
     pass
+
 #     def load(self):
 #         if self.conf_file != "local environment":
 #             self._load_config_file()
@@ -239,7 +245,7 @@ class PseudoConfig(BaseConfig):
 #             self.set(
 #                 "busco_run",
 #                 "download_base_url",
-#                 type(self).DEFAULT_ARGS_VALUES["download_base_url"],
+#                 BaseConfig.DEFAULT_ARGS_VALUES["download_base_url"],
 #             )
 
 #         try:
@@ -248,7 +254,7 @@ class PseudoConfig(BaseConfig):
 #             self.set(
 #                 "busco_run",
 #                 "download_path",
-#                 type(self).DEFAULT_ARGS_VALUES["download_path"],
+#                 BaseConfig.DEFAULT_ARGS_VALUES["download_path"],
 #             )
 
 #         try:
@@ -364,14 +370,13 @@ class BuscoConfigAuto(BaseConfig):
         self.load_dataset(lineage)
         self._create_required_paths()
 
-#     def _create_required_paths(self):
-#         """
-#         Create directory for auto-lineage runs.
-#         :return:
-#         """
-#         main_out = os.path.join(self.get("busco_run", "main_out"), "auto_lineage")
-#         super()._create_required_paths(main_out)
-#         return
+    def _create_required_paths(self):
+        """
+        Create directory for auto-lineage runs.
+        :return:
+        """
+        main_out = os.path.join(self.get("busco_run", "main_out"), "auto_lineage")
+        super()._create_required_paths(main_out)
 
 #     def _propagate_config(self, config):
 #         """
@@ -409,34 +414,22 @@ class BuscoConfigMain(BuscoConfig, BaseConfig):
         # Update the config with args provided by the user, else keep config
         self._update_config_with_args(self.params)
         self._check_value_constraints()
-
-
-#     @classmethod
-#     def merge_two_dicts(cls, x, y):
-#         """Given two dictionaries, merge them into a new dict as a shallow copy."""
-#         z = x.copy()
-#         z.update(y)
-#         return z
-
-    def validate(self):
         self._check_mandatory_keys_exist()
         self._check_out_value()
         self._check_limit_value()
         self._check_evalue()
         self._expand_all_paths()
         self._check_no_previous_run()
-#         self._check_allowed_keys()
-#         self._create_required_paths()
-#         self._check_required_input_exists()
-#         self._check_batch_mode()
+        self._check_allowed_keys()
+        self._create_required_paths()
+        self._check_required_input_exists()
+        self._check_batch_mode()
+        self._init_downloader()
+        # self.log_config()
 
-#         self._init_downloader()
-
-#         self.log_config()
-
-#     def log_config(self):
-#         logger.debug("State of BUSCO config before run:")
-#         logger.debug(PrettyLog(vars(self)))
+    def log_config(self):
+        logger.debug("State of BUSCO config before run:")
+        logger.debug(PrettyLog(vars(self)))
 
 #     def check_lineage_present(self):
 #         """
@@ -474,14 +467,14 @@ class BuscoConfigMain(BuscoConfig, BaseConfig):
 #         except NoOptionError:
 #             return False
 
-#     def _check_batch_mode(self):
-#         if os.path.isdir(self._input_filepath):
-#             self.set("busco_run", "batch_mode", "True")
-#         elif not os.path.isfile(self._input_filepath):
-#             raise BatchFatalError(
-#                 "Unrecognized input type. Please use either a single file or a directory name (for batch mode)"
-#             )
-#         return
+    def _check_batch_mode(self):
+        if os.path.isdir(self._input_filepath):
+            self.set("busco_run", "batch_mode", "True")
+        elif not os.path.isfile(self._input_filepath):
+            raise BatchFatalError(
+                "Unrecognized input type. Please use either a single file or a directory name (for batch mode)"
+            )
+        return
 
     def _check_evalue(self):
         """
@@ -490,7 +483,7 @@ class BuscoConfigMain(BuscoConfig, BaseConfig):
         """
         if (
             self.getfloat("busco_run", "evalue")
-            != type(self).DEFAULT_ARGS_VALUES["evalue"]
+            != BaseConfig.DEFAULT_ARGS_VALUES["evalue"]
         ):
             logger.warning("You are using a custom e-value cutoff")
         return
@@ -508,14 +501,13 @@ class BuscoConfigMain(BuscoConfig, BaseConfig):
             )
         return
 
-    
     @log("Mode is {0}", logger, attr_name="_mode", on_func_exit=True, log_once=True)
     def _check_mandatory_keys_exist(self):
         """
         Make sure all mandatory user-provided parameters are present in the config.
         :return:
         """
-        for param in type(self).MANDATORY_USER_PROVIDED_PARAMS:
+        for param in BaseConfig.MANDATORY_USER_PROVIDED_PARAMS:
             try:
                 value = self.get("busco_run", param)
                 if param == "mode":
@@ -583,25 +575,27 @@ class BuscoConfigMain(BuscoConfig, BaseConfig):
                 )
         return
 
-#     def _check_allowed_keys(self):
-#         full_dict = {"busco_run": type(self).PERMITTED_OPTIONS}
-#         full_dict.update(
-#             {
-#                 dependency: ["path", "command"]
-#                 for dependency in type(self).DEPENDENCY_SECTIONS
-#             }
-#         )
+    def _check_allowed_keys(self):
+        """ Remove?
+        """
+        full_dict = {"busco_run": BaseConfig.PERMITTED_OPTIONS}
+        full_dict.update(
+            {
+                dependency: ["path", "command"]
+                for dependency in BaseConfig.DEPENDENCY_SECTIONS
+            }
+        )
 
-#         for section_name, options in full_dict.items():
-#             try:
-#                 for option in self.options(section_name):
-#                     if option not in options:
-#                         raise BatchFatalError(
-#                             "Unrecognized option '{}' in config file".format(option)
-#                         )
-#             except NoSectionError:
-#                 logger.warning("Section {} not found".format(section_name))
-#         return
+        for section_name, options in full_dict.items():
+            try:
+                for option in self.options(section_name):
+                    if option not in options:
+                        raise BatchFatalError(
+                            "Unrecognized option '{}' in config file".format(option)
+                        )
+            except NoSectionError:
+                logger.warning("Section {} not found".format(section_name))
+        return
 
     def _check_out_value(self):
         """
@@ -615,17 +609,17 @@ class BuscoConfigMain(BuscoConfig, BaseConfig):
             )
         return
 
-#     def _check_required_input_exists(self):
-#         """
-#         Test for existence of input file.
-#         :return:
-#         """
-#         self._input_filepath = self.get("busco_run", "in")
-#         if not os.path.exists(self._input_filepath):
-#             raise BatchFatalError(
-#                 "Input {} does not exist".format(self._input_filepath)
-#             )
-#         return
+    def _check_required_input_exists(self):
+        """
+        Test for existence of input file.
+        :return:
+        """
+        self._input_filepath = self.get("busco_run", "in")
+        if not os.path.exists(self._input_filepath):
+            raise BatchFatalError(
+                "Input {} does not exist".format(self._input_filepath)
+            )
+        return
 
     def _check_no_previous_run(self):
 
@@ -667,14 +661,14 @@ class BuscoConfigMain(BuscoConfig, BaseConfig):
         """
         shutil.rmtree(dirpath)
         
-#     def _create_required_paths(self):
-#         """
-#         Create main output directory and tmp directory.
-#         :return:
-#         """
-#         super()._create_required_paths(self.main_out)
-#         self.set("busco_run", "main_out", self.main_out)
-#         return
+    def _create_required_paths(self):
+        """
+        Create main output directory and tmp??? directory.
+        :return:
+        """
+        super()._create_required_paths(self.main_out)
+        self.set("busco_run", "main_out", self.main_out)
+        return
 
     def _expand_all_paths(self):
         """

@@ -20,7 +20,7 @@ logger = BuscoLogger.get_logger(__name__)
 
 
 class BuscoConfigManager:
-    
+
     def __init__(self, params):
         self.params = params
         self.config_file = None
@@ -54,8 +54,6 @@ class BuscoConfigManager:
     def load_busco_config_main(self, *args):
         self.config_main = BuscoConfigMain(self.config_file, self.params)
         self.config_main.configure()
-        self.config_main.validate()
-        return
 
     # def load_busco_config_auto(self, lineage):
     #     autoconfig = BuscoConfigAuto(self.config_main, lineage)
