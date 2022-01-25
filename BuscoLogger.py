@@ -8,7 +8,8 @@
 
 This is a logger for the pipeline that extends the default Python logger class
 
-Copyright (c) 2016-2021, Evgeny Zdobnov (ez@ezlab.org)
+Copyright (c) 2021, Aleksey Komissarov (ad3002@gmail.com)
+based on Evgeny Zdobnov (ez@ezlab.org)
 Licensed under the MIT license. See LICENSE.md file.
 
 """
@@ -18,7 +19,7 @@ import logging.handlers
 import sys
 import io
 import os
-from busco.Exceptions import BatchFatalError, BuscoError
+from aglab_busco.Exceptions import BatchFatalError, BuscoError
 
 from configparser import NoOptionError
 from configparser import NoSectionError
@@ -52,6 +53,7 @@ class LogDecorator:
         self.retval = None
 
     def __call__(self, func):
+
         def wrapped_func(*args, **kwargs):
             try:
                 if "{" in self.msg and self.on_func_exit:
@@ -67,6 +69,7 @@ class LogDecorator:
         return wrapped_func
 
     def format_string(self, *args):
+
         if self.log_once:
             if self.attr_name in type(self)._log_once_keywords:
                 return
@@ -150,7 +153,7 @@ class BuscoLogger(logging.getLoggerClass()):
         :param name: the name of the BuscoLogger instance to be created
         :type name: str
         """
-        super(BuscoLogger, self).__init__(name)
+        super().__init__(name)
         self.setLevel(BuscoLogger._level)
         self._normal_formatter = logging.Formatter(
             "%(asctime)s %(levelname)s:\t%(message)s", datefmt="%Y-%m-%d %H:%M:%S"
@@ -163,36 +166,37 @@ class BuscoLogger(logging.getLoggerClass()):
 
         self._out_hdlr = logging.StreamHandler(sys.stdout)
         self._out_hdlr.addFilter(LessThanFilter(logging.ERROR))
-        self._out_hdlr.setLevel(logging.INFO)
+        self._out_hdlr.setLevel(self._level)
         self._out_hdlr.setFormatter(self._normal_formatter)
         self.addHandler(self._out_hdlr)
 
-        self._err_hdlr = logging.StreamHandler()
+        self._err_hdlr = logging.StreamHandler(sys.stderr)
         self._err_hdlr.setLevel(logging.ERROR)
         self._err_hdlr.setFormatter(self._normal_formatter)
         self.addHandler(self._err_hdlr)
 
-        try:
-            # Identify main log file with process ID and have all spawned processes log to the correct file
-            log_filename = "busco_{}.log".format(type(self).ppid)
-            if not os.path.exists(log_filename):
-                log_filename = "busco_{}.log".format(type(self).pid)
+        ### this section write to file, so I've commented it out
+        # try:
+        #     # Identify main log file with process ID and have all spawned processes log to the correct file
+        #     log_filename = "busco_{}.log".format(type(self).ppid)
+        #     if not os.path.exists(log_filename):
+        #         log_filename = "busco_{}.log".format(type(self).pid)
 
-            # Process id used in filename to avoid complications for parallel BUSCO runs.
-            self._file_hdlr = logging.FileHandler(log_filename, mode="a")
-        except IOError as e:
-            errStr = (
-                "No permission to write in the current directory: {}".format(
-                    os.getcwd()
-                )
-                if e.errno == 13
-                else "IO error({0}): {1}".format(e.errno, e.strerror)
-            )
-            raise BatchFatalError(errStr)
+        #     # Process id used in filename to avoid complications for parallel BUSCO runs.
+        #     self._file_hdlr = logging.FileHandler(log_filename, mode="a")
+        # except IOError as e:
+        #     errStr = (
+        #         "No permission to write in the current directory: {}".format(
+        #             os.getcwd()
+        #         )
+        #         if e.errno == 13
+        #         else "IO error({0}): {1}".format(e.errno, e.strerror)
+        #     )
+        #     raise BatchFatalError(errStr)
 
-        self._file_hdlr.setLevel(logging.DEBUG)
-        self._file_hdlr.setFormatter(self._verbose_formatter)
-        self.addHandler(self._file_hdlr)
+        # self._file_hdlr.setLevel(logging.DEBUG)
+        # self._file_hdlr.setFormatter(self._verbose_formatter)
+        # self.addHandler(self._file_hdlr)
 
         self._warn_hdlr = logging.StreamHandler(type(self).warn_output)
         self._warn_hdlr.setLevel(logging.WARNING)
@@ -257,10 +261,10 @@ class BuscoLogger(logging.getLoggerClass()):
 
 # Code from https://stackoverflow.com/a/31459386/4844311
 
-
 class LessThanFilter(logging.Filter):
+
     def __init__(self, exclusive_maximum, name=""):
-        super(LessThanFilter, self).__init__(name)
+        super().__init__(name)
         self.max_level = exclusive_maximum
 
     def filter(self, record):
