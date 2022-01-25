@@ -27,6 +27,19 @@ from aglab_busco.Exceptions import BatchFatalError
 
 logger = BuscoLogger.get_logger(__name__)
 
+def confirmation_decorator(message):
+    ''' Decorator factory for action confirmation
+    '''
+    def wrap(f):
+        def wrapped_f(*args, **kwargs):
+            logger.warning(message)
+            confirm_message = '>>> Please, confirm this action (no)? '
+            if input(confirm_message) in ["y", "Y", "yes", "Yes"]:
+                return f(*args, **kwargs)
+            else:
+                return lambda x: None
+        return wrapped_f
+    return wrap
 
 class BaseConfig(ConfigParser):
 
@@ -495,6 +508,7 @@ class BuscoConfigMain(BuscoConfig, BaseConfig):
             )
         return
 
+    
     @log("Mode is {0}", logger, attr_name="_mode", on_func_exit=True, log_once=True)
     def _check_mandatory_keys_exist(self):
         """
@@ -613,48 +627,46 @@ class BuscoConfigMain(BuscoConfig, BaseConfig):
 #             )
 #         return
 
-#     def _check_no_previous_run(self):
-#         self.main_out = os.path.join(
-#             self.get("busco_run", "out_path"), self.get("busco_run", "out")
-#         )
-#         if os.path.exists(self.main_out):
-#             if self.getboolean("busco_run", "force"):
-#                 self._force_remove_existing_output_dir(self.main_out)
-#             elif self.getboolean("busco_run", "restart"):
-#                 logger.info(
-#                     "Attempting to restart the run using the following directory: {}".format(
-#                         self.main_out
-#                     )
-#                 )
-#             else:
-#                 raise BatchFatalError(
-#                     "A run with the name {} already exists...\n"
-#                     "\tIf you are sure you wish to overwrite existing files, "
-#                     "please use the -f (force) option".format(self.main_out)
-#                 )
-#         elif self.getboolean("busco_run", "restart"):
-#             logger.warning(
-#                 "Restart mode not available as directory {} does not exist.".format(
-#                     self.main_out
-#                 )
-#             )
-#             self.set("busco_run", "restart", "False")
+    def _check_no_previous_run(self):
 
-#         return
+        self.main_out = os.path.join(
+            self.get("busco_run", "out_path"), self.get("busco_run", "out")
+        )
+        if os.path.exists(self.main_out):
+            if self.getboolean("busco_run", "force"):
+                self._force_remove_existing_output_dir(self.main_out)
+            elif self.getboolean("busco_run", "restart"):
+                logger.info(
+                    "Attempting to restart the run using the following directory: {}".format(
+                        self.main_out
+                    )
+                )
+            else:
+                raise BatchFatalError(
+                    "A run with the name {} already exists...\n"
+                    "\tIf you are sure you wish to overwrite existing files, "
+                    "please use the -f (force) option".format(self.main_out)
+                )
+        elif self.getboolean("busco_run", "restart"):
+            logger.warning(
+                "Restart mode not available as directory {} does not exist.".format(
+                    self.main_out
+                )
+            )
+            self.set("busco_run", "restart", "False")
 
-
-#     @staticmethod
-#     @log(
-#         "'Force' option selected; overwriting previous results directory", logger
-#     )  # todo: review log messages
-#     def _force_remove_existing_output_dir(dirpath):
-#         """
-#         Remove main output folder from a previous BUSCO run.
-#         :return:
-#         """
-#         shutil.rmtree(dirpath)
-#         return
-
+    @staticmethod
+    @log(
+        "'Force' option selected; overwriting previous results directory", logger
+    )
+    @confirmation_decorator("Output directory will be removed")
+    def _force_remove_existing_output_dir(dirpath):
+        """
+        Remove main output folder from a previous BUSCO run.
+        :return:
+        """
+        shutil.rmtree(dirpath)
+        
 #     def _create_required_paths(self):
 #         """
 #         Create main output directory and tmp directory.
@@ -701,6 +713,7 @@ class BuscoConfigMain(BuscoConfig, BaseConfig):
 
 # Code taken from https://dave.dkjones.org/posts/2013/pretty-print-log-python/
 class PrettyLog:
+
     def __init__(self, obj):
         self.obj = obj
 
